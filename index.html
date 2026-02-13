@@ -462,6 +462,15 @@
         <div id="overall-stats-inline"></div>
         
         <div id="survivor-input">
+          <!-- スクショアップロード -->
+          <div class="screenshot-upload-section" style="margin-bottom: 20px; text-align: center;">
+            <button type="button" class="screenshot-upload-btn" onclick="document.getElementById('survivor-screenshot').click()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+              スクショから自動入力
+            </button>
+            <input type="file" id="survivor-screenshot" accept="image/*" style="display: none;" onchange="analyzeScreenshot('survivor', this)">
+            <div id="survivor-analysis-status" style="margin-top: 10px; font-size: 13px; color: #666;"></div>
+          </div>
+          
           <div class="form-group">
             <label class="form-label">段位</label>
             <select id="survivor-rank">
@@ -526,6 +535,15 @@
         </div>
         
         <div id="hunter-input" style="display: none;">
+          <!-- スクショアップロード -->
+          <div class="screenshot-upload-section" style="margin-bottom: 20px; text-align: center;">
+            <button type="button" class="screenshot-upload-btn" onclick="document.getElementById('hunter-screenshot').click()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+              スクショから自動入力
+            </button>
+            <input type="file" id="hunter-screenshot" accept="image/*" style="display: none;" onchange="analyzeScreenshot('hunter', this)">
+            <div id="hunter-analysis-status" style="margin-top: 10px; font-size: 13px; color: #666;"></div>
+          </div>
+          
           <div class="form-group">
             <label class="form-label">段位</label>
             <select id="hunter-rank">
@@ -684,6 +702,194 @@
       updateOpponentSurvivorSelects(); // 相手サバイバー選択肢の初期化
       loadData(); // データを読み込む
       updateAllWithFilters(); // フィルターと統計を更新
+    }
+    
+    // 画像解析関数
+    async function analyzeScreenshot(perspective, input) {
+      const file = input.files[0];
+      if (!file) return;
+      
+      const statusElement = document.getElementById(`${perspective}-analysis-status`);
+      statusElement.textContent = '解析中... (10-20秒程度かかります)';
+      statusElement.style.color = '#3b82f6';
+      
+      try {
+        // 画像をBase64に変換
+        const base64 = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result.split(',')[1]);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+        
+        // Claude APIで解析
+        const response = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'claude-sonnet-4-20250514',
+            max_tokens: 2000,
+            messages: [{
+              role: 'user',
+              content: [
+                {
+                  type: 'image',
+                  source: {
+                    type: 'base64',
+                    media_type: file.type,
+                    data: base64
+                  }
+                },
+                {
+                  type: 'text',
+                  text: generateAnalysisPrompt(perspective)
+                }
+              ]
+            }]
+          })
+        });
+        
+        // レスポンスのステータスを確認
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('API Error:', response.status, errorText);
+          throw new Error(`API Error: ${response.status} - ${errorText}`);
+        }
+        
+        const data = await response.json();
+        console.log('API Response:', data); // デバッグ用
+        
+        if (data.content && data.content[0] && data.content[0].text) {
+          const result = parseAnalysisResult(data.content[0].text);
+          console.log('Parsed Result:', result); // デバッグ用
+          
+          if (result) {
+            applyAnalysisResult(perspective, result);
+            statusElement.textContent = '✅ 解析完了！内容を確認して登録してください';
+            statusElement.style.color = '#10b981';
+          } else {
+            throw new Error('JSON解析に失敗しました');
+          }
+        } else {
+          console.error('Unexpected response format:', data);
+          throw new Error('解析結果の取得に失敗しました');
+        }
+        
+      } catch (error) {
+        console.error('解析エラー:', error);
+        
+        // エラーメッセージをより詳細に表示
+        let errorMessage = '❌ 解析に失敗しました。';
+        if (error.message.includes('API Error')) {
+          errorMessage += ' APIエラーが発生しました。';
+        } else if (error.message.includes('JSON')) {
+          errorMessage += ' データの解析に失敗しました。';
+        } else if (error.message.includes('Failed to fetch')) {
+          errorMessage += ' ネットワークエラーです。インターネット接続を確認してください。';
+        }
+        
+        statusElement.textContent = errorMessage;
+        statusElement.style.color = '#dc3545';
+      }
+      
+      // ファイル入力をリセット
+      input.value = '';
+    }
+    
+    // 解析プロンプトを生成
+    function generateAnalysisPrompt(perspective) {
+      return `この画像は第五人格（Identity V）のランク戦の試合結果画面です。
+以下の情報を抽出してJSON形式で返してください。
+
+【画面の構成】
+- 1行目：ハンター
+- 2-5行目：サバイバー4人
+- 右側に「自分」と書かれている行が自キャラ
+
+【勝敗の表記】
+- 完全勝利 → 勝利
+- 辛勝 → 引き分け
+- 完全敗北 → 敗北
+
+【脱出人数】
+「脱出」と表示されている人数をカウント
+
+【段位アイコン】
+名前の横の小さなアイコンから段位を判別：
+1段、2段、3段、4段、5段、6段、7段、最高峰
+
+【必ず返すJSON形式】
+{
+  "map": "マップ名",
+  "rank": "段位",
+  "result": "勝利 or 引き分け or 敗北",
+  "escapeCount": 数値,
+  "myCharacter": "自キャラ名",
+  ${perspective === 'survivor' ? 
+    '"teammates": ["味方1", "味方2", "味方3"], "opponentHunter": "ハンター名"' :
+    '"opponentSurvivors": ["サバイバー1", "サバイバー2", "サバイバー3", "サバイバー4"]'
+  }
+}
+
+JSONのみを返してください。説明文は不要です。`;
+    }
+    
+    // 解析結果をパース
+    function parseAnalysisResult(text) {
+      try {
+        // JSONを抽出（```json ``` で囲まれている場合に対応）
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          return JSON.parse(jsonMatch[0]);
+        }
+        return JSON.parse(text);
+      } catch (error) {
+        console.error('JSON解析エラー:', error);
+        return null;
+      }
+    }
+    
+    // 解析結果をフォームに適用
+    function applyAnalysisResult(perspective, result) {
+      if (!result) return;
+      
+      if (perspective === 'survivor') {
+        if (result.rank) document.getElementById('survivor-rank').value = result.rank;
+        if (result.myCharacter) document.getElementById('my-survivor').value = result.myCharacter;
+        if (result.teammates && result.teammates.length >= 3) {
+          document.getElementById('teammate-1').value = result.teammates[0] || '';
+          document.getElementById('teammate-2').value = result.teammates[1] || '';
+          document.getElementById('teammate-3').value = result.teammates[2] || '';
+        }
+        if (result.opponentHunter) document.getElementById('opponent-hunter').value = result.opponentHunter;
+        if (result.map) document.getElementById('survivor-map').value = result.map;
+        if (result.escapeCount !== undefined) {
+          selectedEscapeCount.survivor = result.escapeCount;
+          document.querySelectorAll('#survivor-input .result-button').forEach((btn, index) => {
+            btn.classList.toggle('selected', index === result.escapeCount);
+          });
+        }
+        updateSurvivorSelects();
+      } else {
+        if (result.rank) document.getElementById('hunter-rank').value = result.rank;
+        if (result.myCharacter) document.getElementById('my-hunter').value = result.myCharacter;
+        if (result.opponentSurvivors && result.opponentSurvivors.length >= 4) {
+          document.getElementById('opponent-survivor-1').value = result.opponentSurvivors[0] || '';
+          document.getElementById('opponent-survivor-2').value = result.opponentSurvivors[1] || '';
+          document.getElementById('opponent-survivor-3').value = result.opponentSurvivors[2] || '';
+          document.getElementById('opponent-survivor-4').value = result.opponentSurvivors[3] || '';
+        }
+        if (result.map) document.getElementById('hunter-map').value = result.map;
+        if (result.escapeCount !== undefined) {
+          selectedEscapeCount.hunter = result.escapeCount;
+          document.querySelectorAll('#hunter-input .result-button').forEach((btn, index) => {
+            btn.classList.toggle('selected', index === result.escapeCount);
+          });
+        }
+        updateOpponentSurvivorSelects();
+      }
     }
     
     // サバイバー選択肢を更新（重複を除外）
@@ -1264,7 +1470,7 @@
       const perspectiveMatches = getFilteredMatches(rankFilter);
       
       if (perspectiveMatches.length === 0) {
-        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🎭</div><p>まだ試合データがありません</p></div>';
+        container.innerHTML = '<div class="empty-state"><p>まだ試合データがありません</p></div>';
         return;
       }
       
@@ -1357,7 +1563,7 @@
       }
       
       if (perspectiveMatches.length === 0) {
-        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🗺️</div><p>まだ試合データがありません</p></div>';
+        container.innerHTML = '<div class="empty-state"><p>まだ試合データがありません</p></div>';
         return;
       }
       
@@ -1432,7 +1638,7 @@
       }
       
       if (perspectiveMatches.length === 0) {
-        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">⚔️</div><p>まだ試合データがありません</p></div>';
+        container.innerHTML = '<div class="empty-state"><p>まだ試合データがありません</p></div>';
         return;
       }
       
@@ -1591,7 +1797,7 @@
       const perspectiveMatches = getFilteredMatches(rankFilter).reverse();
       
       if (perspectiveMatches.length === 0) {
-        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📝</div><p>まだ試合データがありません</p></div>';
+        container.innerHTML = '<div class="empty-state"><p>まだ試合データがありません</p></div>';
         return;
       }
       
