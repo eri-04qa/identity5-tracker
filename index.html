@@ -3,30 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- SEO最適化 -->
   <title>第五人格トラッカー | 戦績管理・勝率計算アプリ</title>
-  <meta name="description" content="第五人格（Identity V）のランク戦の戦績を簡単に記録・管理できる無料ツール。勝率、キャラ別統計、マップ別データを自動計算。サバイバー/ハンター両対応で完全無料。">
-  <meta name="keywords" content="第五人格,Identity V,戦績,勝率,トラッカー,ランク戦,統計,サバイバー,ハンター">
-  
-  <!-- OGP（SNS共有用） -->
-  <meta property="og:title" content="第五人格トラッカー | 戦績管理・勝率計算">
-  <meta property="og:description" content="第五人格のランク戦戦績を簡単に記録・管理">
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="https://idv-tracker.github.io/">
-  
-  <!-- Twitter Card -->
-  <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="第五人格トラッカー">
-  <meta name="twitter:description" content="戦績管理・勝率計算アプリ">
-  
-  <!-- アイコン設定 -->
-  <link rel="apple-touch-icon" href="icon.png">
-  <link rel="icon" type="image/png" sizes="180x180" href="icon.png">
-  <link rel="shortcut icon" href="icon.png">
-  
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6919699894432312"
-     crossorigin="anonymous"></script>
-
+  <meta name="description" content="第五人格のランク戦戦績を簡単に記録・管理。勝率、キャラ別・マップ別・相手別の統計を自動計算。サバイバー/ハンター両対応。完全無料で使えるツール。">
   
   <!-- Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-EL23B3L2TD"></script>
@@ -495,50 +473,52 @@
         <div id="overall-stats-inline"></div>
         
         <div id="survivor-input">
+          <button type="button" onclick="event.preventDefault(); event.stopPropagation(); clearAllPersistence('survivor'); return false;" style="padding: 8px 16px; background: #6c757d; color: white; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; margin-bottom: 15px;">全てクリア</button>
+          
           <div class="form-group">
-            <label class="form-label">段位</label>
+            <label class="form-label">段位 <input type="checkbox" id="persist-survivor-rank" style="margin-left: 8px;"> <span style="font-size: 12px;">保持</span></label>
             <select id="survivor-rank">
               <option value="">選択してください</option>
             </select>
           </div>
           
           <div class="form-group">
-            <label class="form-label">自分のサバイバー</label>
+            <label class="form-label">自分のサバイバー <input type="checkbox" id="persist-my-survivor" style="margin-left: 8px;"> <span style="font-size: 12px;">保持</span></label>
             <select id="my-survivor" onchange="updateSurvivorSelects()">
               <option value="">選択してください</option>
             </select>
           </div>
           
           <div class="form-group">
-            <label class="form-label">味方サバイバー1</label>
+            <label class="form-label">味方サバイバー1 <input type="checkbox" id="persist-teammate-1" style="margin-left: 8px;"> <span style="font-size: 12px;">保持</span></label>
             <select id="teammate-1" onchange="updateSurvivorSelects()">
               <option value="">選択してください</option>
             </select>
           </div>
           
           <div class="form-group">
-            <label class="form-label">味方サバイバー2</label>
+            <label class="form-label">味方サバイバー2 <input type="checkbox" id="persist-teammate-2" style="margin-left: 8px;"> <span style="font-size: 12px;">保持</span></label>
             <select id="teammate-2" onchange="updateSurvivorSelects()">
               <option value="">選択してください</option>
             </select>
           </div>
           
           <div class="form-group">
-            <label class="form-label">味方サバイバー3</label>
+            <label class="form-label">味方サバイバー3 <input type="checkbox" id="persist-teammate-3" style="margin-left: 8px;"> <span style="font-size: 12px;">保持</span></label>
             <select id="teammate-3" onchange="updateSurvivorSelects()">
               <option value="">選択してください</option>
             </select>
           </div>
           
           <div class="form-group">
-            <label class="form-label">相手ハンター</label>
+            <label class="form-label">相手ハンター <input type="checkbox" id="persist-opponent-hunter" style="margin-left: 8px;"> <span style="font-size: 12px;">保持</span></label>
             <select id="opponent-hunter">
               <option value="">選択してください</option>
             </select>
           </div>
           
           <div class="form-group">
-            <label class="form-label">マップ</label>
+            <label class="form-label">マップ <input type="checkbox" id="persist-survivor-map" style="margin-left: 8px;"> <span style="font-size: 12px;">保持</span></label>
             <select id="survivor-map">
               <option value="">選択してください</option>
             </select>
@@ -555,54 +535,56 @@
             </div>
           </div>
           
-          <button class="submit-button" onclick="submitMatch('survivor')">試合を記録</button>
+          <button type="button" class="submit-button" onclick="submitMatch('survivor')">試合を記録</button>
         </div>
         
         <div id="hunter-input" style="display: none;">
+          <button type="button" onclick="event.preventDefault(); event.stopPropagation(); clearAllPersistence('hunter'); return false;" style="padding: 8px 16px; background: #6c757d; color: white; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; margin-bottom: 15px;">全てクリア</button>
+          
           <div class="form-group">
-            <label class="form-label">段位</label>
+            <label class="form-label">段位 <input type="checkbox" id="persist-hunter-rank" style="margin-left: 8px;"> <span style="font-size: 12px;">保持</span></label>
             <select id="hunter-rank">
               <option value="">選択してください</option>
             </select>
           </div>
           
           <div class="form-group">
-            <label class="form-label">自分のハンター</label>
+            <label class="form-label">自分のハンター <input type="checkbox" id="persist-my-hunter" style="margin-left: 8px;"> <span style="font-size: 12px;">保持</span></label>
             <select id="my-hunter">
               <option value="">選択してください</option>
             </select>
           </div>
           
           <div class="form-group">
-            <label class="form-label">相手サバイバー1</label>
+            <label class="form-label">相手サバイバー1 <input type="checkbox" id="persist-opponent-survivor-1" style="margin-left: 8px;"> <span style="font-size: 12px;">保持</span></label>
             <select id="opponent-survivor-1" onchange="updateOpponentSurvivorSelects()">
               <option value="">選択してください</option>
             </select>
           </div>
           
           <div class="form-group">
-            <label class="form-label">相手サバイバー2</label>
+            <label class="form-label">相手サバイバー2 <input type="checkbox" id="persist-opponent-survivor-2" style="margin-left: 8px;"> <span style="font-size: 12px;">保持</span></label>
             <select id="opponent-survivor-2" onchange="updateOpponentSurvivorSelects()">
               <option value="">選択してください</option>
             </select>
           </div>
           
           <div class="form-group">
-            <label class="form-label">相手サバイバー3</label>
+            <label class="form-label">相手サバイバー3 <input type="checkbox" id="persist-opponent-survivor-3" style="margin-left: 8px;"> <span style="font-size: 12px;">保持</span></label>
             <select id="opponent-survivor-3" onchange="updateOpponentSurvivorSelects()">
               <option value="">選択してください</option>
             </select>
           </div>
           
           <div class="form-group">
-            <label class="form-label">相手サバイバー4</label>
+            <label class="form-label">相手サバイバー4 <input type="checkbox" id="persist-opponent-survivor-4" style="margin-left: 8px;"> <span style="font-size: 12px;">保持</span></label>
             <select id="opponent-survivor-4" onchange="updateOpponentSurvivorSelects()">
               <option value="">選択してください</option>
             </select>
           </div>
           
           <div class="form-group">
-            <label class="form-label">マップ</label>
+            <label class="form-label">マップ <input type="checkbox" id="persist-hunter-map" style="margin-left: 8px;"> <span style="font-size: 12px;">保持</span></label>
             <select id="hunter-map">
               <option value="">選択してください</option>
             </select>
@@ -671,6 +653,12 @@
             </select>
           </div>
           <div class="filter-group">
+            <label class="filter-label">対戦相手フィルター</label>
+            <select id="opponent-hunter-filter" onchange="updateAllStats()">
+              <option value="all">全て</option>
+            </select>
+          </div>
+          <div class="filter-group">
             <label class="filter-label">マップフィルター</label>
             <select id="opponent-map-filter" onchange="updateAllStats()">
               <option value="all">全マップ</option>
@@ -691,7 +679,7 @@
           </div>
         </div>
         <div id="match-history"></div>
-        <button class="reset-button" onclick="resetAllData()">全データをリセット</button>
+        <button type="button" class="reset-button" onclick="event.stopPropagation(); resetAllData(); return false;">全データをリセット</button>
       </div>
     </div>
     
@@ -729,7 +717,12 @@
       populateSelects();
       updateSurvivorSelects(); // サバイバー選択肢の初期化
       updateOpponentSurvivorSelects(); // 相手サバイバー選択肢の初期化
-      loadData(); // データを読み込む
+      loadData(); // データを読み込む（保持値の復元は後で）
+      
+      // 保持された値を復元（DOM要素が完全に準備された後）
+      loadPersistedValues('survivor');
+      loadPersistedValues('hunter');
+      
       updateAllWithFilters(); // フィルターと統計を更新
     }
     
@@ -820,6 +813,17 @@
           select.appendChild(option);
         });
       });
+      
+      // 対戦相手ハンターフィルターの選択肢を追加
+      const opponentHunterFilter = document.getElementById('opponent-hunter-filter');
+      if (opponentHunterFilter) {
+        HUNTERS.forEach(hunter => {
+          const option = document.createElement('option');
+          option.value = hunter;
+          option.textContent = hunter;
+          opponentHunterFilter.appendChild(option);
+        });
+      }
       
       const mapSelects = ['survivor-map', 'hunter-map'];
       mapSelects.forEach(id => {
@@ -1123,35 +1127,67 @@
       matches.push(match);
       saveData();
       
-      // 前回の入力値を保存（段位と自キャラのみ）
-      saveLastInput(perspective, match.rank, match.myCharacter);
+      // 保持設定を保存
+      savePersistedValues(perspective);
       
       resetForm(perspective);
       alert('試合を記録しました！');
       updateAllWithFilters();
     }
     
-    // フォームをリセット（段位と自キャラは保持）
+    // フォームをリセット（保持設定に応じて）
     function resetForm(perspective) {
       if (perspective === 'survivor') {
-        // 段位と自キャラは保持
-        document.getElementById('teammate-1').value = '';
-        document.getElementById('teammate-2').value = '';
-        document.getElementById('teammate-3').value = '';
-        document.getElementById('opponent-hunter').value = '';
-        document.getElementById('survivor-map').value = '';
+        const fields = [
+          { id: 'survivor-rank', persistKey: 'persist-survivor-rank' },
+          { id: 'my-survivor', persistKey: 'persist-my-survivor' },
+          { id: 'teammate-1', persistKey: 'persist-teammate-1' },
+          { id: 'teammate-2', persistKey: 'persist-teammate-2' },
+          { id: 'teammate-3', persistKey: 'persist-teammate-3' },
+          { id: 'opponent-hunter', persistKey: 'persist-opponent-hunter' },
+          { id: 'survivor-map', persistKey: 'persist-survivor-map' }
+        ];
+        
+        fields.forEach(field => {
+          const persistCheckbox = document.getElementById(field.persistKey);
+          const select = document.getElementById(field.id);
+          
+          // 保持チェックボックスがオフの場合のみクリア
+          if (!persistCheckbox || !persistCheckbox.checked) {
+            if (select) {
+              select.value = '';
+            }
+          }
+        });
+        
         selectedEscapeCount.survivor = null;
         document.querySelectorAll('#survivor-input .result-button').forEach(btn => {
           btn.classList.remove('selected');
         });
         updateSurvivorSelectOptions(); // 選択肢を更新
       } else {
-        // 段位と自キャラは保持
-        document.getElementById('opponent-survivor-1').value = '';
-        document.getElementById('opponent-survivor-2').value = '';
-        document.getElementById('opponent-survivor-3').value = '';
-        document.getElementById('opponent-survivor-4').value = '';
-        document.getElementById('hunter-map').value = '';
+        const fields = [
+          { id: 'hunter-rank', persistKey: 'persist-hunter-rank' },
+          { id: 'my-hunter', persistKey: 'persist-my-hunter' },
+          { id: 'opponent-survivor-1', persistKey: 'persist-opponent-survivor-1' },
+          { id: 'opponent-survivor-2', persistKey: 'persist-opponent-survivor-2' },
+          { id: 'opponent-survivor-3', persistKey: 'persist-opponent-survivor-3' },
+          { id: 'opponent-survivor-4', persistKey: 'persist-opponent-survivor-4' },
+          { id: 'hunter-map', persistKey: 'persist-hunter-map' }
+        ];
+        
+        fields.forEach(field => {
+          const persistCheckbox = document.getElementById(field.persistKey);
+          const select = document.getElementById(field.id);
+          
+          // 保持チェックボックスがオフの場合のみクリア
+          if (!persistCheckbox || !persistCheckbox.checked) {
+            if (select) {
+              select.value = '';
+            }
+          }
+        });
+        
         selectedEscapeCount.hunter = null;
         document.querySelectorAll('#hunter-input .result-button').forEach(btn => {
           btn.classList.remove('selected');
@@ -1171,29 +1207,206 @@
       if (saved) {
         matches = JSON.parse(saved);
       }
-      
-      // 前回の入力値を復元
-      const lastInputSurvivor = localStorage.getItem('identity5_last_input_survivor');
-      if (lastInputSurvivor) {
-        const data = JSON.parse(lastInputSurvivor);
-        if (data.rank) document.getElementById('survivor-rank').value = data.rank;
-        if (data.myCharacter) document.getElementById('my-survivor').value = data.myCharacter;
+    }
+    
+    // 保持された値を復元
+    function loadPersistedValues(perspective) {
+      try {
+        if (perspective === 'survivor') {
+          const fields = [
+            { id: 'survivor-rank', persistKey: 'persist-survivor-rank' },
+            { id: 'my-survivor', persistKey: 'persist-my-survivor' },
+            { id: 'teammate-1', persistKey: 'persist-teammate-1' },
+            { id: 'teammate-2', persistKey: 'persist-teammate-2' },
+            { id: 'teammate-3', persistKey: 'persist-teammate-3' },
+            { id: 'opponent-hunter', persistKey: 'persist-opponent-hunter' },
+            { id: 'survivor-map', persistKey: 'persist-survivor-map' }
+          ];
+          
+          fields.forEach(field => {
+            const persistCheckbox = document.getElementById(field.persistKey);
+            const select = document.getElementById(field.id);
+            const savedValue = localStorage.getItem(`persist_value_${field.id}`);
+            const isChecked = localStorage.getItem(`persist_checkbox_${field.persistKey}`) === 'true';
+            
+            if (isChecked && persistCheckbox) {
+              persistCheckbox.checked = true;
+            }
+            
+            if (savedValue && select) {
+              select.value = savedValue;
+            }
+          });
+        } else {
+          const fields = [
+            { id: 'hunter-rank', persistKey: 'persist-hunter-rank' },
+            { id: 'my-hunter', persistKey: 'persist-my-hunter' },
+            { id: 'opponent-survivor-1', persistKey: 'persist-opponent-survivor-1' },
+            { id: 'opponent-survivor-2', persistKey: 'persist-opponent-survivor-2' },
+            { id: 'opponent-survivor-3', persistKey: 'persist-opponent-survivor-3' },
+            { id: 'opponent-survivor-4', persistKey: 'persist-opponent-survivor-4' },
+            { id: 'hunter-map', persistKey: 'persist-hunter-map' }
+          ];
+          
+          fields.forEach(field => {
+            const persistCheckbox = document.getElementById(field.persistKey);
+            const select = document.getElementById(field.id);
+            const savedValue = localStorage.getItem(`persist_value_${field.id}`);
+            const isChecked = localStorage.getItem(`persist_checkbox_${field.persistKey}`) === 'true';
+            
+            if (isChecked && persistCheckbox) {
+              persistCheckbox.checked = true;
+            }
+            
+            if (savedValue && select) {
+              select.value = savedValue;
+            }
+          });
+        }
+      } catch (error) {
+        console.error('Error loading persisted values:', error);
       }
+    }
+    
+    // 保持設定を保存
+    function savePersistedValues(perspective) {
+      try {
+        if (perspective === 'survivor') {
+          const fields = [
+            { id: 'survivor-rank', persistKey: 'persist-survivor-rank' },
+            { id: 'my-survivor', persistKey: 'persist-my-survivor' },
+            { id: 'teammate-1', persistKey: 'persist-teammate-1' },
+            { id: 'teammate-2', persistKey: 'persist-teammate-2' },
+            { id: 'teammate-3', persistKey: 'persist-teammate-3' },
+            { id: 'opponent-hunter', persistKey: 'persist-opponent-hunter' },
+            { id: 'survivor-map', persistKey: 'persist-survivor-map' }
+          ];
+          
+          fields.forEach(field => {
+            const persistCheckbox = document.getElementById(field.persistKey);
+            const select = document.getElementById(field.id);
+            
+            if (persistCheckbox && persistCheckbox.checked) {
+              localStorage.setItem(`persist_checkbox_${field.persistKey}`, 'true');
+              if (select) {
+                localStorage.setItem(`persist_value_${field.id}`, select.value);
+              }
+            } else {
+              localStorage.removeItem(`persist_checkbox_${field.persistKey}`);
+              localStorage.removeItem(`persist_value_${field.id}`);
+            }
+          });
+        } else {
+          const fields = [
+            { id: 'hunter-rank', persistKey: 'persist-hunter-rank' },
+            { id: 'my-hunter', persistKey: 'persist-my-hunter' },
+            { id: 'opponent-survivor-1', persistKey: 'persist-opponent-survivor-1' },
+            { id: 'opponent-survivor-2', persistKey: 'persist-opponent-survivor-2' },
+            { id: 'opponent-survivor-3', persistKey: 'persist-opponent-survivor-3' },
+            { id: 'opponent-survivor-4', persistKey: 'persist-opponent-survivor-4' },
+            { id: 'hunter-map', persistKey: 'persist-hunter-map' }
+          ];
+          
+          fields.forEach(field => {
+            const persistCheckbox = document.getElementById(field.persistKey);
+            const select = document.getElementById(field.id);
+            
+            if (persistCheckbox && persistCheckbox.checked) {
+              localStorage.setItem(`persist_checkbox_${field.persistKey}`, 'true');
+              if (select) {
+                localStorage.setItem(`persist_value_${field.id}`, select.value);
+              }
+            } else {
+              localStorage.removeItem(`persist_checkbox_${field.persistKey}`);
+              localStorage.removeItem(`persist_value_${field.id}`);
+            }
+          });
+        }
+      } catch (error) {
+        console.error('Error saving persisted values:', error);
+      }
+    }
+    
+    // 全ての保持設定をクリア（確認なし）
+    function clearAllPersistence(perspective) {
+      console.log('clearAllPersistence called with perspective:', perspective);
       
-      const lastInputHunter = localStorage.getItem('identity5_last_input_hunter');
-      if (lastInputHunter) {
-        const data = JSON.parse(lastInputHunter);
-        if (data.rank) document.getElementById('hunter-rank').value = data.rank;
-        if (data.myCharacter) document.getElementById('my-hunter').value = data.myCharacter;
+      try {
+        console.log('Clearing persistence immediately...');
+        
+        if (perspective === 'survivor') {
+          const fields = [
+            { id: 'survivor-rank', persistKey: 'persist-survivor-rank' },
+            { id: 'my-survivor', persistKey: 'persist-my-survivor' },
+            { id: 'teammate-1', persistKey: 'persist-teammate-1' },
+            { id: 'teammate-2', persistKey: 'persist-teammate-2' },
+            { id: 'teammate-3', persistKey: 'persist-teammate-3' },
+            { id: 'opponent-hunter', persistKey: 'persist-opponent-hunter' },
+            { id: 'survivor-map', persistKey: 'persist-survivor-map' }
+          ];
+          
+          fields.forEach(field => {
+            const persistCheckbox = document.getElementById(field.persistKey);
+            const select = document.getElementById(field.id);
+            
+            console.log(`Processing field: ${field.id}, checkbox found: ${!!persistCheckbox}, select found: ${!!select}`);
+            
+            if (persistCheckbox) {
+              persistCheckbox.checked = false;
+            }
+            
+            if (select) {
+              select.value = '';
+            }
+            
+            localStorage.removeItem(`persist_checkbox_${field.persistKey}`);
+            localStorage.removeItem(`persist_value_${field.id}`);
+          });
+          
+          // 選択肢を更新
+          updateSurvivorSelectOptions();
+          
+          console.log('Survivor persistence cleared successfully');
+        } else {
+          const fields = [
+            { id: 'hunter-rank', persistKey: 'persist-hunter-rank' },
+            { id: 'my-hunter', persistKey: 'persist-my-hunter' },
+            { id: 'opponent-survivor-1', persistKey: 'persist-opponent-survivor-1' },
+            { id: 'opponent-survivor-2', persistKey: 'persist-opponent-survivor-2' },
+            { id: 'opponent-survivor-3', persistKey: 'persist-opponent-survivor-3' },
+            { id: 'opponent-survivor-4', persistKey: 'persist-opponent-survivor-4' },
+            { id: 'hunter-map', persistKey: 'persist-hunter-map' }
+          ];
+          
+          fields.forEach(field => {
+            const persistCheckbox = document.getElementById(field.persistKey);
+            const select = document.getElementById(field.id);
+            
+            console.log(`Processing field: ${field.id}, checkbox found: ${!!persistCheckbox}, select found: ${!!select}`);
+            
+            if (persistCheckbox) {
+              persistCheckbox.checked = false;
+            }
+            
+            if (select) {
+              select.value = '';
+            }
+            
+            localStorage.removeItem(`persist_checkbox_${field.persistKey}`);
+            localStorage.removeItem(`persist_value_${field.id}`);
+          });
+          
+          // 選択肢を更新
+          updateHunterOpponentSelectOptions();
+          
+          console.log('Hunter persistence cleared successfully');
+        }
+      } catch (error) {
+        console.error('Error clearing persistence:', error);
       }
     }
     
     // 入力値を保存
-    function saveLastInput(perspective, rank, myCharacter) {
-      const key = `identity5_last_input_${perspective}`;
-      localStorage.setItem(key, JSON.stringify({ rank, myCharacter }));
-    }
-    
     // フィルタリングされたデータを取得
     function getFilteredMatches(rankFilter) {
       let filtered = matches.filter(m => m.perspective === currentPerspective);
@@ -1306,8 +1519,8 @@
       const streak = calculateWinStreak(perspectiveMatches, currentPerspective); // 連勝は全期間で計算
       
       const isRecent100 = overallStatsMode === 'recent100';
-      const buttonText = isRecent100 ? '全期間' : '直近100試合';
-      const statsTitle = isRecent100 ? `直近${displayMatches.length}試合の勝率` : '総合勝率';
+      const buttonText = isRecent100 ? '全期間' : '百戦勝率';
+      const statsTitle = isRecent100 ? '百戦勝率' : '総合勝率';
       
       let html = `<div class="stats-card" style="margin-bottom: 20px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
@@ -1518,9 +1731,11 @@
         const matches = stats[key];
         if (matches.length >= minGames) {
           const result = calculateWinrate(matches, currentPerspective);
+          const winrate = parseFloat(result.winrate);
+          
           validData.push({
             name: key,
-            winrate: parseFloat(result.winrate),
+            winrate: winrate,
             wins: result.wins,
             losses: result.losses,
             draws: result.draws,
@@ -1544,8 +1759,15 @@
         return belowThreshold.sort((a, b) => a.winrate - b.winrate).slice(0, 5);
       }
       
-      // ステップ5：閾値以下がない場合、最も低いもの1つだけ返す
-      return validData.sort((a, b) => a.winrate - b.winrate).slice(0, 1);
+      // ステップ5：閾値以下がない場合、最も低いもの1つだけ返す（ただし100%は除外）
+      const sortedData = validData.sort((a, b) => a.winrate - b.winrate);
+      
+      // 最も低いものが100%の場合は表示しない
+      if (sortedData.length > 0 && sortedData[0].winrate === 100) {
+        return [];
+      }
+      
+      return sortedData.slice(0, 1);
     }
     
     // 苦手要素表示HTMLを生成（控えめなデザイン）
@@ -1554,7 +1776,7 @@
       
       const threshold = currentPerspective === 'hunter' ? 50 : 30;
       const hasWeakness = weaknesses.some(w => w.winrate <= threshold);
-      const displayTitle = hasWeakness ? `苦手${title}` : `${title}（勝率が低い順）`;
+      const displayTitle = `苦手${title}`;
       
       let html = `
         <div style="background: #f8f9fa; border-left: 3px solid #6c757d; padding: 12px 15px; margin-bottom: 15px; border-radius: 4px;">
@@ -1756,12 +1978,18 @@
       const container = document.getElementById('opponent-stats');
       const rankFilter = document.getElementById('opponent-rank-filter').value;
       const myCharFilter = document.getElementById('my-char-filter').value;
+      const opponentHunterFilter = document.getElementById('opponent-hunter-filter') ? document.getElementById('opponent-hunter-filter').value : 'all';
       const mapFilter = document.getElementById('opponent-map-filter').value;
       let perspectiveMatches = getFilteredMatches(rankFilter);
       
       // 自キャラでフィルター
       if (myCharFilter !== 'all') {
         perspectiveMatches = perspectiveMatches.filter(m => m.myCharacter === myCharFilter);
+      }
+      
+      // 対戦相手ハンターでフィルター（サバイバー視点のみ）
+      if (currentPerspective === 'survivor' && opponentHunterFilter !== 'all') {
+        perspectiveMatches = perspectiveMatches.filter(m => m.opponentHunter === opponentHunterFilter);
       }
       
       // マップでフィルター
@@ -2006,8 +2234,8 @@
               <span>${details}</span>
             </div>
             <div class="match-actions">
-              <button class="edit-button" onclick="editMatch(${match.id})">編集</button>
-              <button class="delete-button" onclick="deleteMatch(${match.id})">削除</button>
+              <button type="button" class="edit-button" onclick="event.stopPropagation(); editMatch(${match.id}); return false;">編集</button>
+              <button type="button" class="delete-button" onclick="event.stopPropagation(); deleteMatch(${match.id}); return false;">削除</button>
             </div>
           </div>
         `;
@@ -2020,9 +2248,15 @@
     
     // 試合を編集
     function editMatch(id) {
-      const match = matches.find(m => m.id === id);
-      if (!match) return;
+      console.log('editMatch called with id:', id);
       
+      const match = matches.find(m => m.id === id);
+      if (!match) {
+        console.error('Match not found:', id);
+        return;
+      }
+      
+      console.log('Match found:', match);
       editingMatchId = id;
       
       if (match.perspective === 'survivor') {
@@ -2086,24 +2320,26 @@
       window.scrollTo(0, 0);
     }
     
-    // 試合を削除
+    // 試合を削除（確認なし）
     function deleteMatch(id) {
-      if (!confirm('この試合データを削除しますか？')) return;
+      console.log('deleteMatch called with id:', id);
       
       matches = matches.filter(m => m.id !== id);
       saveData();
       updateAllWithFilters();
-      alert('試合データを削除しました');
+      
+      console.log('Match deleted successfully');
     }
     
-    // 全データをリセット
+    // 全データをリセット（確認なし）
     function resetAllData() {
-      if (!confirm('本当に全てのデータをリセットしますか？この操作は取り消せません。')) return;
+      console.log('resetAllData called');
       
       matches = [];
       saveData();
       updateAllWithFilters();
-      alert('全データをリセットしました');
+      
+      console.log('All data reset successfully');
     }
     
     window.addEventListener('DOMContentLoaded', init);
