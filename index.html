@@ -4,27 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>第五人格トラッカー | 戦績管理・勝率計算アプリ</title>
-  <meta name="description" content="第五人格（Identity V）のランク戦の戦績を簡単に記録・管理できる無料ツール。勝率、キャラ別統計、マップ別データを自動計算。サバイバー/ハンター両対応で完全無料。">
-  <meta name="keywords" content="第五人格,Identity V,戦績,勝率,トラッカー,ランク戦,統計,サバイバー,ハンター">
-
-  <!-- OGP（SNS共有用） -->
-  <meta property="og:title" content="第五人格トラッカー | 戦績管理・勝率計算">
-  <meta property="og:description" content="第五人格のランク戦戦績を簡単に記録・管理">
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="https://idv-tracker.github.io/">
-  
-  <!-- Twitter Card -->
-  <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="第五人格トラッカー">
-  <meta name="twitter:description" content="戦績管理・勝率計算アプリ">
-  
-  <!-- アイコン設定 -->
-  <link rel="apple-touch-icon" href="icon.png">
-  <link rel="icon" type="image/png" sizes="180x180" href="icon.png">
-  <link rel="shortcut icon" href="icon.png">
-  
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6919699894432312"
-     crossorigin="anonymous"></script>
+  <meta name="description" content="第五人格のランク戦戦績を簡単に記録・管理。勝率、キャラ別・マップ別・相手別の統計を自動計算。サバイバー/ハンター両対応。完全無料で使えるツール。">
   
   <!-- Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-EL23B3L2TD"></script>
@@ -634,6 +614,12 @@
               <option value="all">全段位</option>
             </select>
           </div>
+          <div class="filter-group">
+            <label class="filter-label">マップフィルター</label>
+            <select id="character-map-filter" onchange="updateAllStats()">
+              <option value="all">全マップ</option>
+            </select>
+          </div>
         </div>
         <div id="character-stats"></div>
       </div>
@@ -749,6 +735,12 @@
         opponentFilterGroup.style.display = 'block';
       }
       
+      // 対戦相手ハンターフィルターを更新
+      updateOpponentHunterFilter();
+      
+      // 自キャラ別勝率のマップフィルターを更新
+      updateCharacterMapFilter();
+      
       updateAllWithFilters(); // フィルターと統計を更新
     }
     
@@ -840,17 +832,6 @@
         });
       });
       
-      // 対戦相手ハンターフィルターの選択肢を追加
-      const opponentHunterFilter = document.getElementById('opponent-hunter-filter');
-      if (opponentHunterFilter) {
-        HUNTERS.forEach(hunter => {
-          const option = document.createElement('option');
-          option.value = hunter;
-          option.textContent = hunter;
-          opponentHunterFilter.appendChild(option);
-        });
-      }
-      
       const mapSelects = ['survivor-map', 'hunter-map'];
       mapSelects.forEach(id => {
         const select = document.getElementById(id);
@@ -882,6 +863,82 @@
       ['opponent-survivor-1', 'opponent-survivor-2', 'opponent-survivor-3', 'opponent-survivor-4'].forEach(id => {
         document.getElementById(id).addEventListener('change', () => updateHunterOpponentSelectOptions());
       });
+    }
+    
+    // 対戦相手ハンターフィルターを更新（実際に対戦したハンターのみ表示）
+    function updateOpponentHunterFilter() {
+      const opponentHunterFilter = document.getElementById('opponent-hunter-filter');
+      if (!opponentHunterFilter) return;
+      
+      // 現在の選択値を保存
+      const currentValue = opponentHunterFilter.value;
+      
+      // サバイバー視点の試合から対戦したハンターを抽出
+      const survivorMatches = matches.filter(m => m.perspective === 'survivor');
+      const encounteredHunters = new Set();
+      
+      survivorMatches.forEach(match => {
+        if (match.opponentHunter) {
+          encounteredHunters.add(match.opponentHunter);
+        }
+      });
+      
+      // 選択肢をクリア（「全て」以外）
+      opponentHunterFilter.innerHTML = '<option value="all">全て</option>';
+      
+      // 実際に対戦したハンターのみ追加（アルファベット順）
+      const sortedHunters = Array.from(encounteredHunters).sort();
+      sortedHunters.forEach(hunter => {
+        const option = document.createElement('option');
+        option.value = hunter;
+        option.textContent = hunter;
+        opponentHunterFilter.appendChild(option);
+      });
+      
+      // 以前の選択値を復元（存在する場合）
+      if (currentValue && (currentValue === 'all' || encounteredHunters.has(currentValue))) {
+        opponentHunterFilter.value = currentValue;
+      } else {
+        opponentHunterFilter.value = 'all';
+      }
+    }
+    
+    // 自キャラ別勝率のマップフィルターを更新（実際に記録したマップのみ表示）
+    function updateCharacterMapFilter() {
+      const characterMapFilter = document.getElementById('character-map-filter');
+      if (!characterMapFilter) return;
+      
+      // 現在の選択値を保存
+      const currentValue = characterMapFilter.value;
+      
+      // 現在の視点の試合から記録されたマップを抽出
+      const perspectiveMatches = matches.filter(m => m.perspective === currentPerspective);
+      const recordedMaps = new Set();
+      
+      perspectiveMatches.forEach(match => {
+        if (match.map) {
+          recordedMaps.add(match.map);
+        }
+      });
+      
+      // 選択肢をクリア（「全マップ」以外）
+      characterMapFilter.innerHTML = '<option value="all">全マップ</option>';
+      
+      // 実際に記録したマップのみ追加（アルファベット順）
+      const sortedMaps = Array.from(recordedMaps).sort();
+      sortedMaps.forEach(map => {
+        const option = document.createElement('option');
+        option.value = map;
+        option.textContent = map;
+        characterMapFilter.appendChild(option);
+      });
+      
+      // 以前の選択値を復元（存在する場合）
+      if (currentValue && (currentValue === 'all' || recordedMaps.has(currentValue))) {
+        characterMapFilter.value = currentValue;
+      } else {
+        characterMapFilter.value = 'all';
+      }
     }
     
     // サバイバー視点：選択済みキャラを他の選択肢から除外
@@ -1062,6 +1119,9 @@
         }
       }
       
+      // 自キャラ別勝率のマップフィルターを更新（視点が変わったので）
+      updateCharacterMapFilter();
+      
       updateAllWithFilters();
     }
     
@@ -1169,6 +1229,13 @@
       savePersistedValues(perspective);
       
       resetForm(perspective);
+      
+      // 対戦相手ハンターフィルターを更新
+      updateOpponentHunterFilter();
+      
+      // 自キャラ別勝率のマップフィルターを更新
+      updateCharacterMapFilter();
+      
       alert('試合を記録しました！');
       updateAllWithFilters();
     }
@@ -1848,7 +1915,13 @@
     function updateCharacterStats() {
       const container = document.getElementById('character-stats');
       const rankFilter = document.getElementById('character-rank-filter').value;
-      const perspectiveMatches = getFilteredMatches(rankFilter);
+      const mapFilter = document.getElementById('character-map-filter').value;
+      let perspectiveMatches = getFilteredMatches(rankFilter);
+      
+      // マップでフィルター
+      if (mapFilter !== 'all') {
+        perspectiveMatches = perspectiveMatches.filter(m => m.map === mapFilter);
+      }
       
       if (perspectiveMatches.length === 0) {
         container.innerHTML = '<div class="empty-state"><p>まだ試合データがありません</p></div>';
@@ -2369,6 +2442,13 @@
       
       matches = matches.filter(m => m.id !== id);
       saveData();
+      
+      // 対戦相手ハンターフィルターを更新
+      updateOpponentHunterFilter();
+      
+      // 自キャラ別勝率のマップフィルターを更新
+      updateCharacterMapFilter();
+      
       updateAllWithFilters();
       
       console.log('Match deleted successfully');
@@ -2394,6 +2474,13 @@
       
       matches = [];
       saveData();
+      
+      // 対戦相手ハンターフィルターを更新
+      updateOpponentHunterFilter();
+      
+      // 自キャラ別勝率のマップフィルターを更新
+      updateCharacterMapFilter();
+      
       updateAllWithFilters();
       
       console.log('All data reset successfully');
