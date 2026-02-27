@@ -3,39 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  <!-- SEO最適化 -->
   <title>第五人格トラッカー | 戦績管理・勝率計算アプリ</title>
-  <meta name="description" content="第五人格（Identity V）のランク戦の戦績を簡単に記録・管理できる無料ツール。勝率、キャラ別統計、マップ別データを自動計算。サバイバー/ハンター両対応で完全無料。">
-  <meta name="keywords" content="第五人格,Identity V,戦績,勝率,トラッカー,ランク戦,統計,サバイバー,ハンター">
+  <meta name="description" content="第五人格のランク戦戦績を簡単に記録・管理。勝率、キャラ別・マップ別・相手別の統計を自動計算。サバイバー/ハンター両対応。完全無料で使えるツール。">
   
-  <!-- OGP（SNS共有用） -->
-  <meta property="og:title" content="第五人格トラッカー | 戦績管理・勝率計算">
-  <meta property="og:description" content="第五人格のランク戦戦績を簡単に記録・管理">
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="https://idv-tracker.github.io/">
-  
-  <!-- Twitter Card -->
-  <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="第五人格トラッカー">
-  <meta name="twitter:description" content="戦績管理・勝率計算アプリ">
-  
-  <!-- アイコン設定 -->
-  <link rel="apple-touch-icon" href="icon.png">
-  <link rel="icon" type="image/png" sizes="180x180" href="icon.png">
-  <link rel="shortcut icon" href="icon.png">
-  
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6919699894432312"
-     crossorigin="anonymous"></script>
-
   <!-- Google Analytics -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-EL23B3L2TD');
-</script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-EL23B3L2TD"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-EL23B3L2TD');
+  </script>
   
   <style>
     * {
@@ -475,22 +453,7 @@
       <h1>第五人格トラッカー</h1>
       <div class="subtitle">戦績管理・勝率計算</div>
     </div>
-
-    <div style="text-align: center; margin: 20px 0; padding: 10px;">
-     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6919699894432312"
-     crossorigin="anonymous"></script>
-<!-- トラッカー_ヘッダー下 -->
-    <ins class="adsbygoogle"
-     style="display:block"
-     data-ad-client="ca-pub-6919699894432312"
-     data-ad-slot="1301873024"
-     data-ad-format="auto"
-     data-full-width-responsive="true"></ins>
-    <script>
-     (adsbygoogle = window.adsbygoogle || []).push({});
-    </script>
-   </div>
-     
+    
     <div class="perspective-tabs">
       <button class="perspective-tab active" onclick="switchPerspective('survivor')">サバイバー</button>
       <button class="perspective-tab" onclick="switchPerspective('hunter')">ハンター</button>
@@ -709,6 +672,11 @@
         <button class="reset-button" onclick="resetAllData()">全データをリセット</button>
       </div>
     </div>
+    
+    <!-- プライバシーポリシーリンク -->
+    <div style="text-align: center; padding: 30px 20px 20px 20px;">
+      <a href="privacy.html" style="color: #94a3b8; text-decoration: none; font-size: 13px; transition: color 0.2s;" onmouseover="this.style.color='#cbd5e1'" onmouseout="this.style.color='#94a3b8'">プライバシーポリシー</a>
+    </div>
   </div>
 
   <script>
@@ -724,6 +692,15 @@
     let selectedEscapeCount = { survivor: null, hunter: null };
     let matches = [];
     let editingMatchId = null;
+    let overallStatsMode = 'all'; // 'all' または 'recent100'
+    
+    // ページネーション用の変数
+    let currentPages = {
+      teammateStats: 1,
+      opponentStats: 1,
+      matchHistory: 1
+    };
+    const itemsPerPage = 20;
     
     // 初期化
     function init() {
@@ -1220,8 +1197,16 @@
       updateMatchHistory();
     }
     
+    // フィルター変更時にページをリセット
+    function resetPagination() {
+      currentPages.teammateStats = 1;
+      currentPages.opponentStats = 1;
+      currentPages.matchHistory = 1;
+    }
+    
     // フィルターを含む全てを更新
     function updateAllWithFilters() {
+      resetPagination();
       populateRankFilters();
       updateAllStats();
     }
@@ -1282,17 +1267,33 @@
     // 総合勝率を更新（試合入力タブ内）
     function updateOverallStats() {
       const container = document.getElementById('overall-stats-inline');
-      const perspectiveMatches = matches.filter(m => m.perspective === currentPerspective);
+      let perspectiveMatches = matches.filter(m => m.perspective === currentPerspective);
       
       if (perspectiveMatches.length === 0) {
         container.innerHTML = '';
         return;
       }
       
-      const stats = calculateWinrate(perspectiveMatches, currentPerspective);
-      const streak = calculateWinStreak(perspectiveMatches, currentPerspective);
+      // 直近100試合モードの場合はフィルタリング
+      let displayMatches = perspectiveMatches;
+      if (overallStatsMode === 'recent100') {
+        displayMatches = perspectiveMatches.slice(-100);
+      }
+      
+      const stats = calculateWinrate(displayMatches, currentPerspective);
+      const streak = calculateWinStreak(perspectiveMatches, currentPerspective); // 連勝は全期間で計算
+      
+      const isRecent100 = overallStatsMode === 'recent100';
+      const buttonText = isRecent100 ? '全期間' : '直近100試合';
+      const statsTitle = isRecent100 ? `直近${displayMatches.length}試合の勝率` : '総合勝率';
       
       let html = `<div class="stats-card" style="margin-bottom: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+          <div style="font-size: 14px; font-weight: 600; color: #666;">${statsTitle}</div>
+          <button onclick="toggleOverallStatsMode()" style="padding: 6px 12px; background: #3b82f6; color: white; border: none; border-radius: 6px; font-size: 12px; cursor: pointer; font-weight: 600;">
+            ${buttonText}
+          </button>
+        </div>
         <div class="overall-stats-display">
           <div class="winrate-big">${stats.winrate}%</div>
           <div class="record-text">${stats.wins}勝 ${stats.losses}敗 ${stats.draws}分け (${stats.totalWithDraws}試合)</div>`;
@@ -1303,6 +1304,257 @@
       
       html += `</div></div>`;
       container.innerHTML = html;
+    }
+    
+    // 総合勝率の表示モードを切り替え
+    function toggleOverallStatsMode() {
+      overallStatsMode = overallStatsMode === 'all' ? 'recent100' : 'all';
+      updateOverallStats();
+    }
+    
+    // ページネーションのHTMLを生成
+    function generatePagination(currentPage, totalPages, onPageChange) {
+      if (totalPages <= 1) return '';
+      
+      let html = '<div style="display: flex; flex-direction: column; gap: 10px; align-items: center; margin-top: 20px; padding: 15px;">';
+      
+      // 前へ/次へボタン + ページ情報
+      html += '<div style="display: flex; gap: 10px; align-items: center;">';
+      
+      // 前へボタン
+      if (currentPage > 1) {
+        html += `<button onclick="${onPageChange}(${currentPage - 1})" style="padding: 8px 16px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600;">← 前へ</button>`;
+      } else {
+        html += `<button disabled style="padding: 8px 16px; background: #d1d5db; color: #9ca3af; border: none; border-radius: 6px; font-size: 14px; font-weight: 600;">← 前へ</button>`;
+      }
+      
+      // ページ情報
+      html += `<span style="font-size: 14px; color: #666; font-weight: 600;">ページ ${currentPage} / ${totalPages}</span>`;
+      
+      // 次へボタン
+      if (currentPage < totalPages) {
+        html += `<button onclick="${onPageChange}(${currentPage + 1})" style="padding: 8px 16px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600;">次へ →</button>`;
+      } else {
+        html += `<button disabled style="padding: 8px 16px; background: #d1d5db; color: #9ca3af; border: none; border-radius: 6px; font-size: 14px; font-weight: 600;">次へ →</button>`;
+      }
+      
+      html += '</div>';
+      
+      // ページ番号ボタン
+      html += '<div style="display: flex; gap: 5px; flex-wrap: wrap; justify-content: center;">';
+      
+      const maxButtons = 7; // 表示する最大ボタン数
+      let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
+      let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+      
+      if (endPage - startPage < maxButtons - 1) {
+        startPage = Math.max(1, endPage - maxButtons + 1);
+      }
+      
+      // 最初のページ
+      if (startPage > 1) {
+        html += `<button onclick="${onPageChange}(1)" style="padding: 6px 12px; background: white; color: #3b82f6; border: 1px solid #3b82f6; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 600;">1</button>`;
+        if (startPage > 2) {
+          html += `<span style="padding: 6px; color: #999;">...</span>`;
+        }
+      }
+      
+      // ページ番号ボタン
+      for (let i = startPage; i <= endPage; i++) {
+        if (i === currentPage) {
+          html += `<button style="padding: 6px 12px; background: #3b82f6; color: white; border: 1px solid #3b82f6; border-radius: 4px; font-size: 13px; font-weight: 600;">${i}</button>`;
+        } else {
+          html += `<button onclick="${onPageChange}(${i})" style="padding: 6px 12px; background: white; color: #3b82f6; border: 1px solid #3b82f6; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 600;">${i}</button>`;
+        }
+      }
+      
+      // 最後のページ
+      if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+          html += `<span style="padding: 6px; color: #999;">...</span>`;
+        }
+        html += `<button onclick="${onPageChange}(${totalPages})" style="padding: 6px 12px; background: white; color: #3b82f6; border: 1px solid #3b82f6; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 600;">${totalPages}</button>`;
+      }
+      
+      html += '</div>';
+      html += '</div>';
+      
+      return html;
+    }
+    
+    // ページ変更関数
+    function changeTeammatePage(page) {
+      currentPages.teammateStats = page;
+      updateOpponentStats();
+    }
+    
+    function changeOpponentPage(page) {
+      currentPages.opponentStats = page;
+      updateOpponentStats();
+    }
+    
+    function changeHistoryPage(page) {
+      currentPages.matchHistory = page;
+      updateMatchHistory();
+    }
+    
+    // 苦手要素を検出する汎用関数
+    function detectWeaknesses(statsData, minMatches = 5) {
+      const threshold = currentPerspective === 'hunter' ? 50 : 30;
+      const results = [];
+      
+      Object.keys(statsData).forEach(key => {
+        const matches = statsData[key];
+        if (matches.length < minMatches) return; // 最小試合数未満は除外
+        
+        const stats = calculateWinrate(matches, currentPerspective);
+        const winrate = parseFloat(stats.winrate);
+        
+        results.push({
+          name: key,
+          winrate: winrate,
+          stats: stats
+        });
+      });
+      
+      // 勝率が低い順にソート
+      results.sort((a, b) => a.winrate - b.winrate);
+      
+      // 基準以下のものを抽出
+      const belowThreshold = results.filter(r => r.winrate <= threshold);
+      
+      if (belowThreshold.length > 0) {
+        // 基準以下のものがあれば上位5つまで
+        return belowThreshold.slice(0, 5);
+      } else if (results.length > 0) {
+        // 基準以下がなければ最も低いもの1つ
+        return [results[0]];
+      } else {
+        // データなし
+        return [];
+      }
+    }
+    
+    // 苦手要素のHTMLを生成
+    function generateWeaknessHTML(weaknesses, title) {
+      if (weaknesses.length === 0) return '';
+      
+      let html = `<div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 12px 15px; margin: 15px 0; border-radius: 6px;">
+        <div style="font-size: 13px; font-weight: 600; color: #92400e; margin-bottom: 8px;">${title}</div>
+        <div style="font-size: 12px; color: #78350f;">`;
+      
+      weaknesses.forEach((item, index) => {
+        html += `${index + 1}. ${item.name} <span style="font-weight: 600;">${item.stats.winrate}%</span> <span style="color: #a16207;">(${item.stats.wins}勝${item.stats.losses}敗${item.stats.draws}分)</span>`;
+        if (index < weaknesses.length - 1) html += '<br>';
+      });
+      
+      html += `</div></div>`;
+      return html;
+    }
+    
+    // 苦手要素を検出
+    function detectWeaknesses(data, minMatches = 5) {
+      const threshold = currentPerspective === 'hunter' ? 50 : 30;
+      const weaknesses = [];
+      
+      Object.keys(data).forEach(key => {
+        const matches = data[key];
+        if (matches.length >= minMatches) {
+          const stats = calculateWinrate(matches, currentPerspective);
+          const winrate = parseFloat(stats.winrate) || 0;
+          
+          weaknesses.push({
+            name: key,
+            winrate: winrate,
+            stats: stats
+          });
+        }
+      });
+      
+      // 閾値以下のものをフィルター
+      let filtered = weaknesses.filter(w => w.winrate <= threshold);
+      
+      // 該当なしの場合は最も低いものを返す
+      if (filtered.length === 0 && weaknesses.length > 0) {
+        weaknesses.sort((a, b) => a.winrate - b.winrate);
+        filtered = [weaknesses[0]];
+      } else {
+        // 勝率が低い順にソート
+        filtered.sort((a, b) => a.winrate - b.winrate);
+      }
+      
+      return filtered.slice(0, 5); // 上位5つ
+    }
+    
+    // 苦手要素を検出
+    function detectWeaknesses(stats, minGames = 5) {
+      const threshold = currentPerspective === 'hunter' ? 50 : 30;
+      
+      // ステップ1：有効なデータを抽出（5試合以上）
+      const validData = [];
+      Object.keys(stats).forEach(key => {
+        const matches = stats[key];
+        if (matches.length >= minGames) {
+          const result = calculateWinrate(matches, currentPerspective);
+          validData.push({
+            name: key,
+            winrate: parseFloat(result.winrate),
+            wins: result.wins,
+            losses: result.losses,
+            draws: result.draws,
+            total: result.totalWithDraws,
+            stats: result
+          });
+        }
+      });
+      
+      // ステップ2：有効データが3つ未満なら空配列を返す（表示しない）
+      if (validData.length < 3) {
+        return [];
+      }
+      
+      // ステップ3：閾値以下のデータを抽出
+      const belowThreshold = validData.filter(d => d.winrate <= threshold);
+      
+      // ステップ4：閾値以下のデータがある場合
+      if (belowThreshold.length > 0) {
+        // 勝率が低い順にソートして最大5つ返す
+        return belowThreshold.sort((a, b) => a.winrate - b.winrate).slice(0, 5);
+      }
+      
+      // ステップ5：閾値以下がない場合、最も低いもの1つだけ返す
+      return validData.sort((a, b) => a.winrate - b.winrate).slice(0, 1);
+    }
+    
+    // 苦手要素表示HTMLを生成（控えめなデザイン）
+    function generateWeaknessHTML(weaknesses, title, icon) {
+      if (weaknesses.length === 0) return '';
+      
+      const threshold = currentPerspective === 'hunter' ? 50 : 30;
+      const hasWeakness = weaknesses.some(w => w.winrate <= threshold);
+      const displayTitle = hasWeakness ? `苦手${title}` : `${title}（勝率が低い順）`;
+      
+      let html = `
+        <div style="background: #f8f9fa; border-left: 3px solid #6c757d; padding: 12px 15px; margin-bottom: 15px; border-radius: 4px;">
+          <div style="font-weight: 600; font-size: 13px; color: #495057; margin-bottom: 8px;">${displayTitle}</div>
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+      `;
+      
+      weaknesses.forEach((item, index) => {
+        const textColor = item.winrate <= threshold ? '#dc3545' : '#6c757d';
+        html += `
+          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
+            <div>
+              <span style="color: #212529;">${index + 1}. ${item.name}</span>
+              <span style="font-size: 11px; color: #6c757d; margin-left: 6px;">(${item.total}試合)</span>
+            </div>
+            <div style="font-weight: 600; color: ${textColor};">${item.winrate.toFixed(1)}%</div>
+          </div>
+        `;
+      });
+      
+      html += `</div></div>`;
+      return html;
     }
     
     // 自キャラ別勝率を更新
@@ -1325,6 +1577,9 @@
         }
         characterStats[char].push(match);
       });
+      
+      // 苦手キャラクターを検出
+      const weakCharacters = detectWeaknesses(characterStats);
       
       const sortedChars = Object.keys(characterStats).sort((a, b) => {
         const statsA = calculateWinrate(characterStats[a], currentPerspective);
@@ -1356,7 +1611,12 @@
         return statsB.totalWithDraws - statsA.totalWithDraws;
       });
       
-      let html = `<div class="stats-card">
+      let html = '';
+      
+      // 苦手キャラクターを表示
+      html += generateWeaknessHTML(weakCharacters, 'キャラクター', '👤');
+      
+      html += `<div class="stats-card">
         <div class="stats-title">キャラクター別勝率（${currentPerspective === 'survivor' ? 'サバイバー' : 'ハンター'}）</div>
         <div class="bar-chart-horizontal">`;
       
@@ -1419,6 +1679,9 @@
         mapStats[map].push(match);
       });
       
+      // 苦手マップを検出
+      const weakMaps = detectWeaknesses(mapStats);
+      
       const sortedMaps = Object.keys(mapStats).sort((a, b) => {
         const statsA = calculateWinrate(mapStats[a], currentPerspective);
         const statsB = calculateWinrate(mapStats[b], currentPerspective);
@@ -1431,7 +1694,12 @@
         return statsB.totalWithDraws - statsA.totalWithDraws;
       });
       
-      let html = `<div class="stats-card">
+      let html = '';
+      
+      // 苦手マップを表示
+      html += generateWeaknessHTML(weakMaps, 'マップ', '🗺️');
+      
+      html += `<div class="stats-card">
         <div class="stats-title">マップ別勝率</div>
         <div class="bar-chart-horizontal">`;
       
@@ -1503,21 +1771,39 @@
           });
         });
         
-        let html = `<div class="stats-card">
+        // 苦手要素を検出
+        const weakHunters = detectWeaknesses(hunterStats);
+        const weakTeammates = detectWeaknesses(teammateStats);
+        
+        let html = '';
+        
+        // 苦手ハンターを表示
+        html += generateWeaknessHTML(weakHunters, '対戦相手（ハンター）', '👻');
+        
+        // 苦手味方を表示
+        html += generateWeaknessHTML(weakTeammates, '味方キャラクター', '👥');
+        
+        // 対戦相手ハンター別勝率
+        html += `<div class="stats-card">
           <div class="stats-title">対戦相手ハンター別勝率</div>
           <div class="bar-chart-horizontal">`;
         
-        Object.keys(hunterStats).sort((a, b) => {
+        const sortedHunters = Object.keys(hunterStats).sort((a, b) => {
           const statsA = calculateWinrate(hunterStats[a], currentPerspective);
           const statsB = calculateWinrate(hunterStats[b], currentPerspective);
           
-          // 勝率で比較
           const winrateDiff = parseFloat(statsB.winrate) - parseFloat(statsA.winrate);
           if (winrateDiff !== 0) return winrateDiff;
           
-          // 勝率が同じなら試合数で比較
           return statsB.totalWithDraws - statsA.totalWithDraws;
-        }).forEach(hunter => {
+        });
+        
+        const totalHunters = sortedHunters.length;
+        const totalHunterPages = Math.ceil(totalHunters / itemsPerPage);
+        const hunterStartIndex = (currentPages.opponentStats - 1) * itemsPerPage;
+        const hunterEndIndex = Math.min(hunterStartIndex + itemsPerPage, totalHunters);
+        
+        sortedHunters.slice(hunterStartIndex, hunterEndIndex).forEach(hunter => {
           const stats = calculateWinrate(hunterStats[hunter], currentPerspective);
           const winrateNum = parseFloat(stats.winrate) || 0;
           const barWidth = winrateNum;
@@ -1539,22 +1825,31 @@
           `;
         });
         
-        html += `</div></div>
-          <div class="stats-card">
-            <div class="stats-title">味方編成別勝率</div>
-            <div class="bar-chart-horizontal">`;
+        html += '</div>';
+        html += generatePagination(currentPages.opponentStats, totalHunterPages, 'changeOpponentPage');
+        html += '</div>';
         
-        Object.keys(teammateStats).sort((a, b) => {
+        // 味方編成別勝率
+        html += `<div class="stats-card">
+          <div class="stats-title">味方編成別勝率</div>
+          <div class="bar-chart-horizontal">`;
+        
+        const sortedTeammates = Object.keys(teammateStats).sort((a, b) => {
           const statsA = calculateWinrate(teammateStats[a], currentPerspective);
           const statsB = calculateWinrate(teammateStats[b], currentPerspective);
           
-          // 勝率で比較
           const winrateDiff = parseFloat(statsB.winrate) - parseFloat(statsA.winrate);
           if (winrateDiff !== 0) return winrateDiff;
           
-          // 勝率が同じなら試合数で比較
           return statsB.totalWithDraws - statsA.totalWithDraws;
-        }).slice(0, 15).forEach(teammate => {
+        });
+        
+        const totalTeammates = sortedTeammates.length;
+        const totalTeammatePages = Math.ceil(totalTeammates / itemsPerPage);
+        const teammateStartIndex = (currentPages.teammateStats - 1) * itemsPerPage;
+        const teammateEndIndex = Math.min(teammateStartIndex + itemsPerPage, totalTeammates);
+        
+        sortedTeammates.slice(teammateStartIndex, teammateEndIndex).forEach(teammate => {
           const stats = calculateWinrate(teammateStats[teammate], currentPerspective);
           const winrateNum = parseFloat(stats.winrate) || 0;
           const barWidth = winrateNum;
@@ -1576,7 +1871,9 @@
           `;
         });
         
-        html += '</div></div>';
+        html += '</div>';
+        html += generatePagination(currentPages.teammateStats, totalTeammatePages, 'changeTeammatePage');
+        html += '</div>';
         container.innerHTML = html;
         
       } else {
@@ -1591,21 +1888,34 @@
           });
         });
         
-        let html = `<div class="stats-card">
+        // 苦手サバイバーを検出
+        const weakSurvivors = detectWeaknesses(survivorStats);
+        
+        let html = '';
+        
+        // 苦手サバイバーを表示
+        html += generateWeaknessHTML(weakSurvivors, '対戦相手（サバイバー）', '👤');
+        
+        html += `<div class="stats-card">
           <div class="stats-title">対戦相手サバイバー別勝率</div>
           <div class="bar-chart-horizontal">`;
         
-        Object.keys(survivorStats).sort((a, b) => {
+        const sortedSurvivors = Object.keys(survivorStats).sort((a, b) => {
           const statsA = calculateWinrate(survivorStats[a], currentPerspective);
           const statsB = calculateWinrate(survivorStats[b], currentPerspective);
           
-          // 勝率で比較
           const winrateDiff = parseFloat(statsB.winrate) - parseFloat(statsA.winrate);
           if (winrateDiff !== 0) return winrateDiff;
           
-          // 勝率が同じなら試合数で比較
           return statsB.totalWithDraws - statsA.totalWithDraws;
-        }).slice(0, 20).forEach(survivor => {
+        });
+        
+        const totalSurvivors = sortedSurvivors.length;
+        const totalPages = Math.ceil(totalSurvivors / itemsPerPage);
+        const startIndex = (currentPages.opponentStats - 1) * itemsPerPage;
+        const endIndex = Math.min(startIndex + itemsPerPage, totalSurvivors);
+        
+        sortedSurvivors.slice(startIndex, endIndex).forEach(survivor => {
           const stats = calculateWinrate(survivorStats[survivor], currentPerspective);
           const winrateNum = parseFloat(stats.winrate) || 0;
           const barWidth = winrateNum;
@@ -1627,7 +1937,9 @@
           `;
         });
         
-        html += '</div></div>';
+        html += '</div>';
+        html += generatePagination(currentPages.opponentStats, totalPages, 'changeOpponentPage');
+        html += '</div>';
         container.innerHTML = html;
       }
     }
@@ -1643,9 +1955,14 @@
         return;
       }
       
+      const totalMatches = perspectiveMatches.length;
+      const totalPages = Math.ceil(totalMatches / itemsPerPage);
+      const startIndex = (currentPages.matchHistory - 1) * itemsPerPage;
+      const endIndex = Math.min(startIndex + itemsPerPage, totalMatches);
+      
       let html = '<div class="match-history">';
       
-      perspectiveMatches.forEach(match => {
+      perspectiveMatches.slice(startIndex, endIndex).forEach(match => {
         const resultText = match.result === 'survivor_win' ? 'サバイバー勝利' : match.result === 'hunter_win' ? 'ハンター勝利' : '引き分け';
         const isWin = (currentPerspective === 'survivor' && match.result === 'survivor_win') || 
                       (currentPerspective === 'hunter' && match.result === 'hunter_win');
@@ -1675,6 +1992,7 @@
       });
       
       html += '</div>';
+      html += generatePagination(currentPages.matchHistory, totalPages, 'changeHistoryPage');
       container.innerHTML = html;
     }
     
@@ -1768,26 +2086,5 @@
     
     window.addEventListener('DOMContentLoaded', init);
   </script>
-  
-  <div style="text-align: center; padding: 20px; color: #999; font-size: 12px;">
-    <a href="privacy.html" style="color: #999;">プライバシーポリシー</a>
-  </div>
-
-  <div style="text-align: center; margin: 20px 0; padding: 10px;">
-  　<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6919699894432312"
-     crossorigin="anonymous"></script>
-<!-- トラッカー_最下部 -->
-　　<ins class="adsbygoogle"
-     style="display:block"
-     data-ad-client="ca-pub-6919699894432312"
-     data-ad-slot="2949172204"
-     data-ad-format="auto"
-     data-full-width-responsive="true"></ins>
-　　<script>
-     (adsbygoogle = window.adsbygoogle || []).push({});
-　　</script>
-　 </div>
-    
-</body>
 </body>
 </html>
