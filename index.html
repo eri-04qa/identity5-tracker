@@ -3,30 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- SEO最適化 -->
   <title>第五人格トラッカー | 戦績管理・勝率計算アプリ</title>
-  <meta name="description" content="第五人格（Identity V）のランク戦の戦績を簡単に記録・管理できる無料ツール。勝率、キャラ別統計、マップ別データを自動計算。サバイバー/ハンター両対応で完全無料。">
-  <meta name="keywords" content="第五人格,Identity V,戦績,勝率,トラッカー,ランク戦,統計,サバイバー,ハンター">
+  <meta name="description" content="第五人格のランク戦戦績を簡単に記録・管理。勝率、キャラ別・マップ別・相手別の統計を自動計算。サバイバー/ハンター両対応。完全無料で使えるツール。">
   
-  <!-- OGP（SNS共有用） -->
-  <meta property="og:title" content="第五人格トラッカー | 戦績管理・勝率計算">
-  <meta property="og:description" content="第五人格のランク戦戦績を簡単に記録・管理">
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="https://idv-tracker.github.io/">
-  
-  <!-- Twitter Card -->
-  <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="第五人格トラッカー">
-  <meta name="twitter:description" content="戦績管理・勝率計算アプリ">
-  
-  <!-- アイコン設定 -->
-  <link rel="apple-touch-icon" href="icon.png">
-  <link rel="icon" type="image/png" sizes="180x180" href="icon.png">
-  <link rel="shortcut icon" href="icon.png">
-  
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6919699894432312"
-     crossorigin="anonymous"></script>
-
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-EL23B3L2TD"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-EL23B3L2TD');
   </script>
   
   <style>
@@ -1649,7 +1635,7 @@
     
     // 苦手要素を検出する汎用関数
     function detectWeaknesses(statsData, minMatches = 5) {
-      const threshold = currentPerspective === 'hunter' ? 50 : 30;
+      const threshold = currentPerspective === 'hunter' ? 50 : 38;
       const results = [];
       
       Object.keys(statsData).forEach(key => {
@@ -1703,7 +1689,7 @@
     
     // 苦手要素を検出
     function detectWeaknesses(data, minMatches = 5) {
-      const threshold = currentPerspective === 'hunter' ? 50 : 30;
+      const threshold = currentPerspective === 'hunter' ? 50 : 38;
       const weaknesses = [];
       
       Object.keys(data).forEach(key => {
@@ -1737,7 +1723,7 @@
     
     // 苦手要素を検出
     function detectWeaknesses(stats, minGames = 5) {
-      const threshold = currentPerspective === 'hunter' ? 50 : 30;
+      const threshold = currentPerspective === 'hunter' ? 50 : 38;
       
       // ステップ1：有効なデータを抽出（5試合以上）
       const validData = [];
@@ -1788,7 +1774,7 @@
     function generateWeaknessHTML(weaknesses, title, icon) {
       if (weaknesses.length === 0) return '';
       
-      const threshold = currentPerspective === 'hunter' ? 50 : 30;
+      const threshold = currentPerspective === 'hunter' ? 50 : 38;
       const hasWeakness = weaknesses.some(w => w.winrate <= threshold);
       const displayTitle = `苦手${title}`;
       
