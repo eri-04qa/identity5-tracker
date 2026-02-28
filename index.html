@@ -3,28 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <title>第五人格トラッカー | 戦績管理・勝率計算アプリ</title>
-  <meta name="description" content="第五人格（Identity V）のランク戦の戦績を簡単に記録・管理できる無料ツール。勝率、キャラ別統計、マップ別データを自動計算。サバイバー/ハンター両対応で完全無料。">
-  <meta name="keywords" content="第五人格,Identity V,戦績,勝率,トラッカー,ランク戦,統計,サバイバー,ハンター">
-
-  <!-- OGP（SNS共有用） -->
-  <meta property="og:title" content="第五人格トラッカー | 戦績管理・勝率計算">
-  <meta property="og:description" content="第五人格のランク戦戦績を簡単に記録・管理">
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="https://idv-tracker.github.io/">
+  <title>第五人格トラッカー | 戦績管理・勝率計算アプリ</title>
+  <meta name="description" content="第五人格のランク戦戦績を簡単に記録・管理。勝率、キャラ別・マップ別・相手別の統計を自動計算。サバイバー/ハンター両対応。完全無料で使えるツール。">
   
-  <!-- Twitter Card -->
-  <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="第五人格トラッカー">
-  <meta name="twitter:description" content="戦績管理・勝率計算アプリ">
-  
-  <!-- アイコン設定 -->
-  <link rel="apple-touch-icon" href="icon.png">
-  <link rel="icon" type="image/png" sizes="180x180" href="icon.png">
-  <link rel="shortcut icon" href="icon.png">
-  
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6919699894432312"
-     crossorigin="anonymous"></script>
   <!-- Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-EL23B3L2TD"></script>
   <script>
@@ -497,6 +478,116 @@
         grid-template-columns: repeat(2, 1fr) !important;
       }
     }
+    
+    /* ===== 検索付きドロップダウン ===== */
+    .searchable-select-wrapper {
+      position: relative;
+      width: 100%;
+    }
+    
+    .searchable-select-wrapper select {
+      display: none !important;
+    }
+    
+    .ss-input {
+      width: 100%;
+      padding: 10px;
+      padding-right: 32px;
+      border: 2px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+      background: white;
+      color: #3b82f6;
+      outline: none;
+      cursor: text;
+    }
+    
+    .ss-input::placeholder {
+      color: #9ca3af;
+    }
+    
+    .ss-input:focus {
+      border-color: #0f3460;
+    }
+    
+    .ss-input.has-value {
+      color: #3b82f6;
+    }
+    
+    .ss-clear {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 22px;
+      height: 22px;
+      border: none;
+      background: #e5e7eb;
+      color: #6b7280;
+      border-radius: 50%;
+      font-size: 14px;
+      line-height: 1;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 2;
+    }
+    
+    .ss-clear:hover {
+      background: #d1d5db;
+      color: #374151;
+    }
+    
+    .ss-clear.visible {
+      display: flex;
+    }
+    
+    .ss-dropdown {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      max-height: 220px;
+      overflow-y: auto;
+      background: white;
+      border: 2px solid #0f3460;
+      border-top: none;
+      border-radius: 0 0 6px 6px;
+      z-index: 100;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    .ss-dropdown.open {
+      display: block;
+    }
+    
+    .ss-option {
+      padding: 10px 12px;
+      cursor: pointer;
+      font-size: 14px;
+      color: #333;
+      border-bottom: 1px solid #f3f4f6;
+      transition: background 0.1s;
+    }
+    
+    .ss-option:last-child {
+      border-bottom: none;
+    }
+    
+    .ss-option:hover,
+    .ss-option.highlighted {
+      background: #e6f0ff;
+      color: #0f3460;
+    }
+    
+    .ss-no-result {
+      padding: 12px;
+      text-align: center;
+      color: #9ca3af;
+      font-size: 13px;
+    }
   </style>
   
   <!-- Chart.js CDN (安定版v3) -->
@@ -906,6 +997,384 @@
     
     const RANKS = ['1段', '2段', '3段', '4段', '5段', '6段', '7段', '最高峰'];
     
+    // ===== ひらがな読みデータ =====
+    const SURVIVOR_READINGS = {
+      '幸運児': 'こううんじ',
+      '医師': 'いし',
+      '弁護士': 'べんごし',
+      '泥棒': 'どろぼう',
+      '庭師': 'にわし',
+      'マジシャン': 'まじしゃん',
+      '冒険家': 'ぼうけんか',
+      '傭兵': 'ようへい',
+      '祭司': 'さいし',
+      '空軍': 'くうぐん',
+      '機械技師': 'きかいぎし',
+      'オフェンス': 'おふぇんす',
+      '心眼': 'しんがん',
+      '調香師': 'ちょうこうし',
+      'カウボーイ': 'かうぼーい',
+      '踊り子': 'おどりこ',
+      '占い師': 'うらないし',
+      '納棺師': 'のうかんし',
+      '探鉱者': 'たんこうしゃ',
+      '呪術師': 'じゅじゅつし',
+      '野人': 'やじん',
+      '曲芸師': 'きょくげいし',
+      '一等航海士': 'いっとうこうかいし',
+      'バーメイド': 'ばーめいど',
+      'ポストマン': 'ぽすとまん',
+      '墓守': 'はかもり',
+      '「囚人」': 'しゅうじん',
+      '昆虫学者': 'こんちゅうがくしゃ',
+      '画家': 'がか',
+      'バッツマン': 'ばっつまん',
+      '玩具職人': 'おもちゃしょくにん',
+      '患者': 'かんじゃ',
+      '「心理学者」': 'しんりがくしゃ',
+      '小説家': 'しょうせつか',
+      '「少女」': 'しょうじょ',
+      '泣きピエロ': 'なきぴえろ',
+      '教授': 'きょうじゅ',
+      '骨董商': 'こっとうしょう',
+      '作曲家': 'さっきょくか',
+      '記者': 'きしゃ',
+      '航空エンジニア': 'こうくうえんじにあ',
+      '応援団': 'おうえんだん',
+      '人形師': 'にんぎょうし',
+      '火災調査員': 'かさいちょうさいん',
+      '「レディ・ファウロ」': 'れでぃふぁうろ',
+      '「騎士」': 'きし',
+      '気象学者': 'きしょうがくしゃ',
+      '弓使い': 'ゆみつかい',
+      '「脱出マスター」': 'だっしゅつますたー',
+      '幻灯師': 'げんとうし',
+      '闘牛士': 'とうぎゅうし'
+    };
+    
+    const HUNTER_READINGS = {
+      '復讐者': 'ふくしゅうしゃ れお',
+      '道化師': 'どうけし ぴえろ',
+      '断罪狩人': 'だんざいかりゅうど しか',
+      'リッパー': 'りっぱー',
+      '結魂者': 'けっこんしゃ くも',
+      '芸者': 'げいしゃ みちこ',
+      '白黒無常': 'しろくろむじょう',
+      '写真家': 'しゃしんか じょぜふ',
+      '狂眼': 'きょうがん ばるく',
+      '黄衣の王': 'おういのおう たこ',
+      '夢の魔女': 'ゆめのまじょ',
+      '泣き虫': 'なきむし',
+      '魔トカゲ': 'まとかげ るきの',
+      '血の女王': 'ちのじょおう まりー',
+      'ガードNo.26': 'がーどにじゅうろく ぼんぼん',
+      '「使徒」': 'しと あん',
+      'ヴァイオリニスト': 'ゔぁいおりにすと あんとにお',
+      '彫刻師': 'ちょうこくし がらてあ',
+      'アンデッド': 'あんでっど',
+      '破輪': 'はりん うぃる',
+      '漁師': 'りょうし ぐれいす',
+      '蝋人形師': 'ろうにんぎょうし',
+      '「悪夢」': 'あくむ',
+      '書記官': 'しょきかん きーがん',
+      '隠者': 'いんじゃ',
+      '夜の番人': 'よるのばんにん いたか',
+      'オペラ歌手': 'おぺらかしゅ さんぐりあ',
+      '「フールズ・ゴールド」': 'ふーるずごーるど',
+      '時空の影': 'じくうのかげ あいゔぃ',
+      '「足萎えの羊」': 'あしなえのひつじ',
+      '「フラバルー」': 'ふらばるー',
+      '雑貨商': 'ざっかしょう',
+      '「ビリヤードプレイヤー」': 'びりやーどぷれいやー',
+      '「女王蜂」': 'じょおうばち'
+    };
+    
+    // カタカナ→ひらがな変換
+    function katakanaToHiragana(str) {
+      return str.replace(/[\u30A1-\u30F6]/g, ch =>
+        String.fromCharCode(ch.charCodeAt(0) - 0x60)
+      );
+    }
+    
+    // ===== 検索付きドロップダウン =====
+    class SearchableSelect {
+      constructor(selectEl) {
+        this.select = selectEl;
+        this.value = selectEl.value;
+        this.highlightIndex = -1;
+        this.isOpen = false;
+        this.options = []; // {value, label, reading}
+        
+        this._build();
+        this._bindEvents();
+      }
+      
+      _build() {
+        // ラッパー
+        this.wrapper = document.createElement('div');
+        this.wrapper.className = 'searchable-select-wrapper';
+        this.select.parentNode.insertBefore(this.wrapper, this.select);
+        this.wrapper.appendChild(this.select);
+        
+        // テキスト入力
+        this.input = document.createElement('input');
+        this.input.type = 'text';
+        this.input.className = 'ss-input';
+        this.input.placeholder = '検索して選択...';
+        this.input.autocomplete = 'off';
+        this.wrapper.insertBefore(this.input, this.select);
+        
+        // クリアボタン
+        this.clearBtn = document.createElement('button');
+        this.clearBtn.type = 'button';
+        this.clearBtn.className = 'ss-clear';
+        this.clearBtn.innerHTML = '×';
+        this.clearBtn.tabIndex = -1;
+        this.wrapper.insertBefore(this.clearBtn, this.select);
+        
+        // ドロップダウン
+        this.dropdown = document.createElement('div');
+        this.dropdown.className = 'ss-dropdown';
+        this.wrapper.appendChild(this.dropdown);
+        
+        // 初期値を反映
+        if (this.select.value) {
+          this.input.value = this.select.value;
+          this.input.classList.add('has-value');
+          this.clearBtn.classList.add('visible');
+        }
+      }
+      
+      _bindEvents() {
+        // フォーカス時にドロップダウンを開く
+        this.input.addEventListener('focus', () => {
+          this._refreshOptions();
+          this._filterAndRender('');
+          this._open();
+          this.input.select();
+        });
+        
+        // 入力時にフィルター
+        this.input.addEventListener('input', () => {
+          this._filterAndRender(this.input.value);
+          if (!this.isOpen) this._open();
+        });
+        
+        // キーボード操作
+        this.input.addEventListener('keydown', (e) => {
+          if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            this._moveHighlight(1);
+          } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            this._moveHighlight(-1);
+          } else if (e.key === 'Enter') {
+            e.preventDefault();
+            this._selectHighlighted();
+          } else if (e.key === 'Escape') {
+            this._close();
+            this.input.blur();
+          }
+        });
+        
+        // クリアボタン
+        this.clearBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          this.setValue('');
+          this.input.focus();
+        });
+        
+        // 外側クリックで閉じる
+        document.addEventListener('click', (e) => {
+          if (!this.wrapper.contains(e.target)) {
+            this._close();
+            // 未確定なら元に戻す
+            if (this.value) {
+              this.input.value = this.value;
+            } else {
+              this.input.value = '';
+            }
+          }
+        });
+      }
+      
+      _refreshOptions() {
+        this.options = [];
+        const opts = this.select.querySelectorAll('option');
+        opts.forEach(opt => {
+          if (opt.value === '') return; // placeholder skip
+          const label = opt.textContent;
+          const isSurvivor = SURVIVORS.includes(label);
+          const reading = isSurvivor ? (SURVIVOR_READINGS[label] || '') : (HUNTER_READINGS[label] || '');
+          this.options.push({ value: opt.value, label, reading });
+        });
+      }
+      
+      _filterAndRender(query) {
+        const q = katakanaToHiragana(query.toLowerCase().trim());
+        this.dropdown.innerHTML = '';
+        this.highlightIndex = -1;
+        
+        let filtered;
+        if (!q) {
+          filtered = this.options;
+        } else {
+          filtered = this.options.filter(opt => {
+            const label = opt.label.toLowerCase();
+            const reading = opt.reading;
+            return label.includes(q) || reading.includes(q);
+          });
+        }
+        
+        if (filtered.length === 0) {
+          const noResult = document.createElement('div');
+          noResult.className = 'ss-no-result';
+          noResult.textContent = '該当なし';
+          this.dropdown.appendChild(noResult);
+          this._filteredOptions = [];
+          return;
+        }
+        
+        this._filteredOptions = filtered;
+        
+        filtered.forEach((opt, idx) => {
+          const div = document.createElement('div');
+          div.className = 'ss-option';
+          div.dataset.index = idx;
+          
+          let html = opt.label;
+          div.innerHTML = html;
+          
+          div.addEventListener('mousedown', (e) => {
+            e.preventDefault(); // prevent blur
+          });
+          div.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this._selectOption(opt);
+          });
+          
+          this.dropdown.appendChild(div);
+        });
+      }
+      
+      _open() {
+        this.isOpen = true;
+        this.dropdown.classList.add('open');
+        this.input.style.borderRadius = '6px 6px 0 0';
+      }
+      
+      _close() {
+        this.isOpen = false;
+        this.dropdown.classList.remove('open');
+        this.input.style.borderRadius = '6px';
+        this.highlightIndex = -1;
+      }
+      
+      _moveHighlight(dir) {
+        if (!this._filteredOptions || this._filteredOptions.length === 0) return;
+        const items = this.dropdown.querySelectorAll('.ss-option');
+        if (items.length === 0) return;
+        
+        // 前のハイライトを除去
+        if (this.highlightIndex >= 0 && this.highlightIndex < items.length) {
+          items[this.highlightIndex].classList.remove('highlighted');
+        }
+        
+        this.highlightIndex += dir;
+        if (this.highlightIndex < 0) this.highlightIndex = items.length - 1;
+        if (this.highlightIndex >= items.length) this.highlightIndex = 0;
+        
+        items[this.highlightIndex].classList.add('highlighted');
+        items[this.highlightIndex].scrollIntoView({ block: 'nearest' });
+      }
+      
+      _selectHighlighted() {
+        if (this.highlightIndex >= 0 && this._filteredOptions && this.highlightIndex < this._filteredOptions.length) {
+          this._selectOption(this._filteredOptions[this.highlightIndex]);
+        }
+      }
+      
+      _selectOption(opt) {
+        this.setValue(opt.value);
+        this._close();
+        this.input.blur();
+        
+        // 既存のchangeイベントを発火
+        this.select.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      
+      // 外部から値を設定
+      setValue(val) {
+        this.value = val;
+        this.select.value = val;
+        
+        if (val) {
+          this.input.value = val;
+          this.input.classList.add('has-value');
+          this.clearBtn.classList.add('visible');
+        } else {
+          this.input.value = '';
+          this.input.classList.remove('has-value');
+          this.clearBtn.classList.remove('visible');
+        }
+        updatePlaceholderStyle(this.select);
+      }
+      
+      // selectの値と同期（外部でselectが変更された場合）
+      syncFromSelect() {
+        const val = this.select.value;
+        this.value = val;
+        if (val) {
+          this.input.value = val;
+          this.input.classList.add('has-value');
+          this.clearBtn.classList.add('visible');
+        } else {
+          this.input.value = '';
+          this.input.classList.remove('has-value');
+          this.clearBtn.classList.remove('visible');
+        }
+      }
+    }
+    
+    // SearchableSelectインスタンスを管理
+    const searchableSelects = {};
+    
+    // selectをSearchableSelectに変換
+    function initSearchableSelect(selectId) {
+      const selectEl = document.getElementById(selectId);
+      if (!selectEl || searchableSelects[selectId]) return;
+      searchableSelects[selectId] = new SearchableSelect(selectEl);
+    }
+    
+    // 全キャラ選択selectをSearchableSelectに変換
+    function initAllSearchableSelects() {
+      const charSelectIds = [
+        'my-survivor', 'teammate-1', 'teammate-2', 'teammate-3',
+        'opponent-hunter',
+        'my-hunter',
+        'opponent-survivor-1', 'opponent-survivor-2', 'opponent-survivor-3', 'opponent-survivor-4'
+      ];
+      charSelectIds.forEach(id => initSearchableSelect(id));
+    }
+    
+    // SearchableSelectの値同期用ヘルパー
+    function syncSearchableSelect(selectId) {
+      if (searchableSelects[selectId]) {
+        searchableSelects[selectId].syncFromSelect();
+      }
+    }
+    
+    function setSearchableSelectValue(selectId, value) {
+      const ss = searchableSelects[selectId];
+      if (ss) {
+        ss.setValue(value);
+      } else {
+        const el = document.getElementById(selectId);
+        if (el) el.value = value;
+      }
+    }
+    
     const SEASONS = [
       { id: 'S41', label: 'S41', start: '2026-02-05', end: '2026-04-22' }
       // 新しいシーズンはここに追加
@@ -1310,6 +1779,11 @@
       });
       opponentHunterSelect.value = opponentHunterCurrentValue;
       updatePlaceholderStyle(opponentHunterSelect);
+      
+      // SearchableSelectを同期
+      ['my-survivor', 'teammate-1', 'teammate-2', 'teammate-3',
+       'opponent-survivor-1', 'opponent-survivor-2', 'opponent-survivor-3', 'opponent-survivor-4',
+       'my-hunter', 'opponent-hunter'].forEach(syncSearchableSelect);
     }
     
     // ページネーション用の変数
@@ -1329,6 +1803,9 @@
       // 使用回数データを元にキャラクター選択肢を構築
       populateSelects();
       populatePeriodFilters(); // 期間フィルターにシーズンを追加
+      
+      // キャラ選択を検索付きドロップダウンに変換
+      initAllSearchableSelects();
       
       // プレースホルダースタイルを初期化（選択肢更新の前に実行）
       initializePlaceholderStyles();
@@ -1396,6 +1873,9 @@
         
         // プレースホルダースタイルを更新
         updatePlaceholderStyle(select);
+        
+        // SearchableSelect同期
+        syncSearchableSelect(id);
       });
     }
     
@@ -1434,6 +1914,9 @@
         
         // プレースホルダースタイルを更新
         updatePlaceholderStyle(select);
+        
+        // SearchableSelect同期
+        syncSearchableSelect(id);
       });
     }
     
@@ -1631,6 +2114,9 @@
         
         // プレースホルダースタイルを更新
         updatePlaceholderStyle(select);
+        
+        // SearchableSelect同期
+        syncSearchableSelect(id);
       });
     }
     
@@ -1667,6 +2153,9 @@
         
         // プレースホルダースタイルを更新
         updatePlaceholderStyle(select);
+        
+        // SearchableSelect同期
+        syncSearchableSelect(id);
       });
     }
     
@@ -2008,6 +2497,8 @@
           btn.classList.remove('selected');
         });
         updateSurvivorSelectOptions(); // 選択肢を更新
+        // SearchableSelect同期
+        ['my-survivor', 'teammate-1', 'teammate-2', 'teammate-3', 'opponent-hunter'].forEach(syncSearchableSelect);
       } else {
         const fields = [
           { id: 'hunter-date', persistKey: 'persist-hunter-date', isDate: true },
@@ -2041,6 +2532,8 @@
           btn.classList.remove('selected');
         });
         updateHunterOpponentSelectOptions(); // 選択肢を更新
+        // SearchableSelect同期
+        ['my-hunter', 'opponent-survivor-1', 'opponent-survivor-2', 'opponent-survivor-3', 'opponent-survivor-4'].forEach(syncSearchableSelect);
       }
     }
     
@@ -2142,6 +2635,13 @@
         }
       } catch (error) {
         console.error('Error loading persisted values:', error);
+      }
+      
+      // SearchableSelect同期
+      if (perspective === 'survivor') {
+        ['my-survivor', 'teammate-1', 'teammate-2', 'teammate-3', 'opponent-hunter'].forEach(syncSearchableSelect);
+      } else {
+        ['my-hunter', 'opponent-survivor-1', 'opponent-survivor-2', 'opponent-survivor-3', 'opponent-survivor-4'].forEach(syncSearchableSelect);
       }
     }
     
@@ -2253,6 +2753,8 @@
           
           // 選択肢を更新
           updateSurvivorSelectOptions();
+          // SearchableSelect同期
+          ['my-survivor', 'teammate-1', 'teammate-2', 'teammate-3', 'opponent-hunter'].forEach(syncSearchableSelect);
           
           console.log('Survivor persistence cleared successfully');
         } else {
@@ -2295,6 +2797,8 @@
           
           // 選択肢を更新
           updateHunterOpponentSelectOptions();
+          // SearchableSelect同期
+          ['my-hunter', 'opponent-survivor-1', 'opponent-survivor-2', 'opponent-survivor-3', 'opponent-survivor-4'].forEach(syncSearchableSelect);
           
           console.log('Hunter persistence cleared successfully');
         }
@@ -3055,7 +3559,7 @@
           <div class="bar-row">
             <div class="bar-label-wrapper">
               <div class="bar-label">${map}</div>
-              <div class="bar-sublabel">${stats.wins}勝${stats.losses}敗${stats.draws}分<br>${stats.totalWithDraws}試合</div>
+              <div class="bar-sublabel">${stats.wins}勝${stats.losses}敗${stats.draws}分</div>
             </div>
             <div class="bar-wrapper">
               ${isZero ? `<div class="bar-value-zero">${stats.winrate}%</div>` : `
@@ -3165,7 +3669,7 @@
             <div class="bar-row">
               <div class="bar-label-wrapper">
                 <div class="bar-label">${hunter}</div>
-                <div class="bar-sublabel">${stats.wins}勝${stats.losses}敗${stats.draws}分<br>${stats.totalWithDraws}試合</div>
+                <div class="bar-sublabel">${stats.wins}勝${stats.losses}敗${stats.draws}分</div>
               </div>
               <div class="bar-wrapper">
                 ${isZero ? `<div class="bar-value-zero">${stats.winrate}%</div>` : `
@@ -3211,7 +3715,7 @@
             <div class="bar-row">
               <div class="bar-label-wrapper">
                 <div class="bar-label">${teammate}</div>
-                <div class="bar-sublabel">${stats.wins}勝${stats.losses}敗${stats.draws}分<br>${stats.totalWithDraws}試合</div>
+                <div class="bar-sublabel">${stats.wins}勝${stats.losses}敗${stats.draws}分</div>
               </div>
               <div class="bar-wrapper">
                 ${isZero ? `<div class="bar-value-zero">${stats.winrate}%</div>` : `
@@ -3277,7 +3781,7 @@
             <div class="bar-row">
               <div class="bar-label-wrapper">
                 <div class="bar-label">${survivor}</div>
-                <div class="bar-sublabel">${stats.wins}勝${stats.losses}敗${stats.draws}分<br>${stats.totalWithDraws}試合</div>
+                <div class="bar-sublabel">${stats.wins}勝${stats.losses}敗${stats.draws}分</div>
               </div>
               <div class="bar-wrapper">
                 ${isZero ? `<div class="bar-value-zero">${stats.winrate}%</div>` : `
@@ -3395,6 +3899,8 @@
         
         // 選択肢を更新
         updateSurvivorSelectOptions();
+        // SearchableSelect同期
+        ['my-survivor', 'teammate-1', 'teammate-2', 'teammate-3', 'opponent-hunter'].forEach(syncSearchableSelect);
       } else {
         currentPerspective = 'hunter';
         document.getElementById('hunter-date').value = match.date || getToday();
@@ -3420,6 +3926,8 @@
             btn.classList.add('selected');
           }
         });
+        // SearchableSelect同期
+        ['my-hunter', 'opponent-survivor-1', 'opponent-survivor-2', 'opponent-survivor-3', 'opponent-survivor-4'].forEach(syncSearchableSelect);
       }
       
       document.querySelectorAll('.main-tab').forEach(tab => tab.classList.remove('active'));
